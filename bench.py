@@ -72,6 +72,9 @@ HUMAN_COST = 6.90
 PRICES = {
     "claude-sonnet-5": {"input": 3.00, "output": 15.00, "cache_read": 0.30, "cache_write": 3.75},
     "claude-haiku-4-5-20251001": {"input": 1.00, "output": 5.00, "cache_read": 0.10, "cache_write": 1.25},
+    # Added by the team for the intelligence lever. input/output/cache_read are the published
+    # rates; cache_write is 1.25x input (the 5-minute write multiplier), not a quoted figure.
+    "claude-opus-5-5": {"input": 4.00, "output": 20.00, "cache_read": 0.20, "cache_write": 5.00},
 }
 DEFAULT_PRICE = PRICES["claude-sonnet-5"]
 

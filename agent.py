@@ -14,9 +14,18 @@ from support import (MODEL, SYSTEM_PROMPT, call_local, execute_tool, mcp_client,
                      new_session, next_available_day, record_tool_result,
                      runtime_preamble)
 
-MAX_TOOL_CALLS = 8  # Larkspur's own build capped the loop here; then a human takes over.
+MODEL = "claude-opus-5-5"  # intelligence lever: the model swap (support/data.py ships claude-sonnet-5)
 
-TONE_ADDENDUM = ""                       # ✏️ Build 4, step 4.1, intelligence goal
+MAX_TOOL_CALLS = 8 # Larkspur's own build capped the loop here; then a human takes over.
+
+TONE_ADDENDUM = """
+
+Tone and limits.
+- Insults or rudeness: acknowledge the frustration once, in one short plain sentence, without apologising repeatedly, arguing, or matching their tone. Then keep helping with the disruption as normal.
+- Legal threats (a lawyer, suing, a regulator or complaint to the government): do not argue, do not discuss anyone's legal rights, and do not give the usual rundown of rebooking, refund, meal or credit options. Promise nothing. Acknowledge the complaint once, call escalate_to_human with a reason and a summary for the human, and tell the customer a person will take it from here.
+- Anything you cannot do (refunds, groups, unaccompanied minors, partner flights, other airlines, anything the Handbook says people handle): say plainly that a human handles it, call escalate_to_human, and do not attempt it or imply you can.
+- Never promise an amount, credit, hotel or outcome that check_policy did not return.
+"""                                      # ✏️ Build 4, step 4.1, intelligence goal
 EXTRA_TOOLS: List[Dict[str, Any]] = []   # ✏️ Build 2, step 2.1: schemas for the tools you add
 LOCAL_TOOLS: Dict[str, Any] = {}         # ✏️ Build 2, step 2.1: the functions behind them
 
