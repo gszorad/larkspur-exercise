@@ -65,17 +65,23 @@ def run_agent(pnr: str, last_name: str, message: str) -> str:            # ✏�
         thinking={"type": "adaptive"}, tools=tools, messages=messages,
     )
 
-    answer = ""
     turns = 1
-    while response.stop_reason == "tool_use" and turns < MAX_TOOL_CALLS:
-        messages.append({"role": "assistant", "content": text_of(response)})
-        messages.append({"role": "user", "content": tool_results(response)})
+    answer = ""
+    while True:
+        if response.stop_reason == "tool_use":
+            messages.append({"role": "assistant", "content": response.content})
+            messages.append({"role": "user", "content": tool_results(response)})
+            if turns >= MAX_TOOL_CALLS:
+                break
+            response = client.messages.create(
+                model=MODEL, max_tokens=4096, system=runtime_preamble() + SYSTEM_PROMPT + TONE_ADDENDUM,
+                thinking={"type": "adaptive"}, tools=tools, messages=messages,
+            )
+            turns += 1
+            continue
+
         answer = text_of(response)
-        response = client.messages.create(
-            model=MODEL, max_tokens=4096, system=runtime_preamble() + SYSTEM_PROMPT + TONE_ADDENDUM,
-            thinking={"type": "adaptive"}, tools=tools, messages=messages,
-        )
-        turns += 1
+        break
 
     return answer
 
@@ -119,17 +125,27 @@ def build_tools() -> List[Dict[str, Any]]:                 # ✏️ Build 1, ste
                 "type": "object",
                 "properties": {
                     "flight_no": {"type": "string"},
-                    "date": {"type": "string", "description": "MM/DD/YYYY"},
+                    "date": {"type": "string", "description": "Local flight date in ISO format YYYY-MM-DD, e.g. 2025-05-08. Any other format is rejected."},
                 },
                 "required": ["flight_no", "date"],
             },
         },
         {
             "name": "search_alternatives",
-            "description": "search",
+            "description": (
+                "Search for replacement flights for the booking's disrupted segment (same "
+                "origin, destination and cabin, same passenger count, excluding the "
+                "disrupted flight itself). Call this when the customer needs a new flight, "
+                "after lookup_booking and get_flight_status have confirmed the disruption. "
+                "It takes only the PNR; the route, date and cabin are read from the booking, "
+                "so do not ask the customer for them. Returns option_ids with date, times, "
+                "seats available and operating carrier; show the customer the options and "
+                "use an option_id when holding a seat or calling check_policy. Do not "
+                "invent flights that are not in the results."
+            ),
             "input_schema": {
                 "type": "object",
-                "properties": {"pnr": {"type": "string"}},
+                "properties": {"pnr": {"type": "string", "description": "The booking's confirmation code (PNR), as given by the customer."}},
                 "required": ["pnr"],
             },
         },
